@@ -79,19 +79,17 @@ Oracle Facts 노트북을 검색하고 인용과 함께 답변을 받으세요.
 
 ```mermaid
 graph TB
-    User["👤 사용자<br/>(Claude Code / codex / antigravity)"]
-    Skill["🎯 oracle-facts-query 스킬"]
-    Query["🔍 Query Mode<br/>(쿼리 모드)"]
-    AddSource["➕ Add Source Mode<br/>(소스 추가 모드)"]
-    MCP["🔌 NotebookLM MCP"]
-    NLM["📚 NotebookLM 서비스"]
-    Notebook["📖 Oracle Facts Notebook<br/>(ID: e55f93ec...)"]
-    Sources["📚 지식 소스<br/>- 🌐 웹 URL<br/>- 📄 PDF 문서<br/>- 📊 Google Drive<br/>- 📝 텍스트"]
-    Answer["💬 [1] 출처 명기 답변"]
-    Confirm["✅ 소스 추가 확인"]
+    User["사용자<br/>(Claude Code/codex/antigravity)"]
+    Skill["oracle-facts-query 스킬"]
+    Query["Query Mode<br/>(쿼리 모드)"]
+    AddSource["Add Source Mode<br/>(소스 추가 모드)"]
+    MCP["NotebookLM MCP"]
+    NLM["NotebookLM 서비스"]
+    Notebook["Oracle Facts Notebook"]
+    Sources["지식 소스"]
     
-    User -->|Oracle 관련 질문| Skill
-    User -->|새로운 소스| Skill
+    User -->|질문| Skill
+    User -->|소스 추가| Skill
     
     Skill -->|Query| Query
     Skill -->|Add Source| AddSource
@@ -101,7 +99,7 @@ graph TB
     
     MCP -->|API 요청| NLM
     NLM -->|쿼리/인덱싱| Notebook
-    Notebook -->|소스 검색/저장| Sources
+    Notebook -->|검색/저장| Sources
     
     Notebook -->|검색 결과| NLM
     NLM -->|API 응답| MCP
@@ -109,135 +107,46 @@ graph TB
     MCP -->|결과 처리| Query
     MCP -->|확인| AddSource
     
-    Query -->|[1] [2] [3] 출처| Answer
-    AddSource -->|추가 완료| Confirm
-    
-    Answer -->|인용과 함께 답변| User
-    Confirm -->|소스 추가됨| User
+    Query -->|출처 명기 답변| User
+    AddSource -->|추가 완료| User
     
     style User fill:#e1f5ff
     style Skill fill:#fff3e0
-    style Query fill:#f3e5f5
-    style AddSource fill:#e8f5e9
     style MCP fill:#fce4ec
     style NLM fill:#e0f2f1
     style Notebook fill:#f1f8e9
-    style Sources fill:#fffde7
 ```
 
 ### 아키텍처 구성 요소
 
-**사용자 계층 (User Layer)**
-- Claude Code, codex, antigravity 등 다양한 프로젝트에서 스킬 활용
-
-**스킬 계층 (Skill Layer)**
-- `oracle-facts-query`: Query Mode와 Add Source Mode 제공
-
-**통합 계층 (Integration Layer)**
-- NotebookLM MCP: 스킬과 NotebookLM 간의 통신 담당
-
-**서비스 계층 (Service Layer)**
-- NotebookLM: 질문 검색, 소스 인덱싱, 결과 반환
-
-**데이터 계층 (Data Layer)**
-- Oracle Facts Notebook: 80+ 신뢰도 높은 Oracle 정보 소스 보유
+| 계층 | 역할 | 구성요소 |
+|------|------|---------|
+| **사용자 계층** | 스킬 호출 | Claude Code, codex, antigravity |
+| **스킬 계층** | 요청 처리 | oracle-facts-query (Query/Add Source 모드) |
+| **통합 계층** | API 중개 | NotebookLM MCP |
+| **서비스 계층** | 핵심 기능 | NotebookLM 서비스 |
+| **데이터 계층** | 정보 저장 | Oracle Facts Notebook + 80+ 소스 |
 
 ### 데이터 흐름
 
 **쿼리 흐름:**
 ```
-사용자 질문 → 스킬 → MCP → NotebookLM → Notebook 검색 → 결과 반환 → [출처 형식] 답변
+사용자 질문 
+  → 스킬이 Query Mode 실행
+  → NotebookLM MCP를 통해 notebook_query 호출
+  → NotebookLM이 Notebook 검색
+  → 결과를 [1] [2] [3] 형식으로 출처 명기하여 반환
 ```
 
 **소스 추가 흐름:**
 ```
-사용자 소스 → 스킬 → MCP → NotebookLM → Notebook에 저장 → 인덱싱 → 추가 완료 확인
+사용자 소스 제공 (웹/PDF/Google Drive/텍스트)
+  → 스킬이 Add Source Mode 실행
+  → NotebookLM MCP를 통해 source_add 호출
+  → NotebookLM이 Notebook에 소스 저장 및 인덱싱
+  → 추가 완료 확인 반환
 ```
 
-## 작동 원리
-
-### 쿼리 모드
-1. 사용자가 Oracle 관련 질문을 합니다
-2. 스킬이 NotebookLM MCP를 통해 Oracle Facts 노트북을 쿼리합니다
-3. `[1] 출처 제목` 형식의 소스 인용과 함께 답변을 반환합니다
-
-### 소스 추가 모드
-1. 사용자가 소스(URL, 파일, 텍스트)를 제공합니다
-2. 스킬이 이를 Oracle Facts 노트북에 추가합니다
-3. NotebookLM이 소스를 처리하고 인덱싱합니다
-
-## 요구사항
-
-- **Claude Code**: 최신 버전 (스킬 지원 포함)
-- **NotebookLM MCP**: 설치 및 인증
-- **인터넷 연결**: 웹 소스 및 NotebookLM API 사용
-
-## 노트북 상세 정보
-
-- **이름**: Oracle latest facts
-- **소스**: 80+ 기사, 백서, 설명서
-- **범위**: Oracle 26ai, OCI, 멀티클라우드, AI 역량, 가격, 전략
-- **업데이트**: 커뮤니티 기여를 통해 정기적으로 업데이트
-
-## 여러 프로젝트에서 사용
-
-이 스킬은 다음과 같이 완벽하게 작동합니다:
-- **codex** - 코딩 워크플로우에서 Oracle 정보 쿼리
-- **antigravity** - 제안 전 Oracle 역량 리서치
-- **claude-code** - 일반적인 Oracle 지식 관리
-
----
-
-# NotebookLM 노트북 구성 가이드
-
-이 섹션에서는 이 스킬과 같은 수준의 Oracle 관련 지식 베이스를 구축하기 위해 NotebookLM 노트북을 구성하는 방법을 설명합니다.
-
-## 1. 노트북 생성 (Create Notebook)
-
-### 실행 방법
-1. **NotebookLM 메인 화면**에서 **'새 노트북 (New Notebook)'** 버튼을 클릭합니다
-2. 빈 워크스페이스가 생성됩니다
-
-### 노트북 이름 지정
-용도에 맞게 직관적이고 명확한 이름을 부여합니다.
-
-**추천 예시:**
-- "Oracle Fact checks"
-
----
-
-## 2. 소스 추가 기준 및 딥 리서치 선택
-
-### 소스 선택의 핵심 원칙
-
-#### ① 공신력 있는 출처 우선
-- **최우선**: Oracle 공식 문서
-  - Oracle Help Center (docs.oracle.com)
-  - Oracle Architecture Center
-  - Oracle Official Blogs
-  - 백서 (Whitepapers)
-  - LiveLabs 기술 자료
-
-- **차선**: 기술 커뮤니티
-  - Oracle Database 기술 블로그
-  - 공식 기술 가이드
-
-- **피해야 할 것**: 신뢰도가 낮은 제3자 블로그
-
-#### ② 핵심 리서치 키워드 및 주제
-
-**데이터 통합 및 튜닝**
-- Oracle GoldenGate (OGG) 26ai
-- 성능 튜닝 (Performance Tuning)
-
-**클라우드 마이그레이션**
-- Zero Downtime Migration (ZDM)
-- AutoUpgrade
-- Azure/AWS에서 OCI로의 인프라 이관
-- Kubernetes (K8s) 이관 베스트 프랙티스
-
-**최신 DB 및 AI 기술**
-- Oracle AI Database 26ai 핵심 기능
 - AI Vector Search
 - Agentic AI
 - Autonomous Database

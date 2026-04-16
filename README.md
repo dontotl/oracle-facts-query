@@ -73,6 +73,87 @@ Oracle Facts 노트북을 검색하고 인용과 함께 답변을 받으세요.
 "이 PDF를 Oracle facts 노트북에 추가해줘"
 ```
 
+## 논리 아키텍처
+
+다음 다이어그램은 oracle-facts-query 스킬이 여러 시스템과 어떻게 연계되는지 보여줍니다:
+
+```mermaid
+graph TB
+    User["👤 사용자<br/>(Claude Code / codex / antigravity)"]
+    Skill["🎯 oracle-facts-query 스킬"]
+    Query["🔍 Query Mode<br/>(쿼리 모드)"]
+    AddSource["➕ Add Source Mode<br/>(소스 추가 모드)"]
+    MCP["🔌 NotebookLM MCP"]
+    NLM["📚 NotebookLM 서비스"]
+    Notebook["📖 Oracle Facts Notebook<br/>(ID: e55f93ec...)"]
+    Sources["📚 지식 소스<br/>- 🌐 웹 URL<br/>- 📄 PDF 문서<br/>- 📊 Google Drive<br/>- 📝 텍스트"]
+    Answer["💬 [1] 출처 명기 답변"]
+    Confirm["✅ 소스 추가 확인"]
+    
+    User -->|Oracle 관련 질문| Skill
+    User -->|새로운 소스| Skill
+    
+    Skill -->|Query| Query
+    Skill -->|Add Source| AddSource
+    
+    Query -->|notebook_query| MCP
+    AddSource -->|source_add| MCP
+    
+    MCP -->|API 요청| NLM
+    NLM -->|쿼리/인덱싱| Notebook
+    Notebook -->|소스 검색/저장| Sources
+    
+    Notebook -->|검색 결과| NLM
+    NLM -->|API 응답| MCP
+    
+    MCP -->|결과 처리| Query
+    MCP -->|확인| AddSource
+    
+    Query -->|[1] [2] [3] 출처| Answer
+    AddSource -->|추가 완료| Confirm
+    
+    Answer -->|인용과 함께 답변| User
+    Confirm -->|소스 추가됨| User
+    
+    style User fill:#e1f5ff
+    style Skill fill:#fff3e0
+    style Query fill:#f3e5f5
+    style AddSource fill:#e8f5e9
+    style MCP fill:#fce4ec
+    style NLM fill:#e0f2f1
+    style Notebook fill:#f1f8e9
+    style Sources fill:#fffde7
+```
+
+### 아키텍처 구성 요소
+
+**사용자 계층 (User Layer)**
+- Claude Code, codex, antigravity 등 다양한 프로젝트에서 스킬 활용
+
+**스킬 계층 (Skill Layer)**
+- `oracle-facts-query`: Query Mode와 Add Source Mode 제공
+
+**통합 계층 (Integration Layer)**
+- NotebookLM MCP: 스킬과 NotebookLM 간의 통신 담당
+
+**서비스 계층 (Service Layer)**
+- NotebookLM: 질문 검색, 소스 인덱싱, 결과 반환
+
+**데이터 계층 (Data Layer)**
+- Oracle Facts Notebook: 80+ 신뢰도 높은 Oracle 정보 소스 보유
+
+### 데이터 흐름
+
+**쿼리 흐름:**
+```
+사용자 질문 → 스킬 → MCP → NotebookLM → Notebook 검색 → 결과 반환 → [출처 형식] 답변
+```
+
+**소스 추가 흐름:**
+```
+사용자 소스 → 스킬 → MCP → NotebookLM → Notebook에 저장 → 인덱싱 → 추가 완료 확인
+```
+
 ## 작동 원리
 
 ### 쿼리 모드

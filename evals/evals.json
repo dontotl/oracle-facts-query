@@ -1,0 +1,23 @@
+{
+  "skill_name": "oracle-facts-query",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What are the key features of Oracle AI Database 26ai? Give me the main differences from the previous 23ai version.",
+      "expected_output": "Answer listing AI Database 26ai features with proper source citations in [N] format. Should mention: Long-term support, AI Vector Search inclusion, agentic AI capabilities, no additional cost for advanced features.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need to compare OCI pricing with AWS. How much cheaper is OCI in terms of compute, storage, and networking?",
+      "expected_output": "Specific pricing comparison data with citations. Should mention: compute 50% cheaper, block storage 70% cheaper, networking 80% cheaper.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Add this Oracle press release to the facts notebook: https://www.oracle.com/news/announcement/oracle-ai-database-26ai-launches/",
+      "expected_output": "Confirmation that the URL has been added to the notebook. Should indicate success and brief explanation of what will happen next (processing, indexing).",
+      "files": []
+    }
+  ]
+}
